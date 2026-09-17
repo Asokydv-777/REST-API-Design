@@ -1,0 +1,96 @@
+{
+  "info": {
+    "name": "Phase 5 - Notes API",
+    "description": "Complete REST API collection for A5 submission. Includes success and error cases.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+    },
+    {
+      "name": "List notes - default pagination",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes" }
+    },
+    {
+      "name": "List notes - page 2 limit 5",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes?page=2&limit=5" }
+    },
+    {
+      "name": "List notes - page beyond data (empty data array)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes?page=99&limit=10" }
+    },
+    {
+      "name": "Filter archived=true",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes?archived=true" }
+    },
+    {
+      "name": "Filter archived=false + search",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes?archived=false&search=project" }
+    },
+    {
+      "name": "Combined filter + pagination",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes?archived=true&page=1&limit=2" }
+    },
+    {
+      "name": "Get one note",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes/1" }
+    },
+    {
+      "name": "Create note - success",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Meeting notes for A5 review\",\n  \"content\": \"Discuss pagination edge cases and Postman collection coverage\"\n}"
+        },
+        "url": "{{baseUrl}}/notes"
+      }
+    },
+    {
+      "name": "Create note - validation error (400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"\",\n  \"content\": \"\"\n}"
+        },
+        "url": "{{baseUrl}}/notes"
+      }
+    },
+    {
+      "name": "Update note",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Updated grocery list\",\n  \"archived\": true\n}"
+        },
+        "url": "{{baseUrl}}/notes/1"
+      }
+    },
+    {
+      "name": "Delete note",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/notes/3" }
+    },
+    {
+      "name": "Invalid pagination (400)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes?page=-1&limit=abc" }
+    },
+    {
+      "name": "Get missing note (404)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/notes/9999" }
+    },
+    {
+      "name": "Unknown route (404)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/does-not-exist" }
+    }
+  ]
+}
