@@ -10,7 +10,7 @@ test("first page returns default limit=10", async () => {
   const res = await request(app).get("/notes");
   expect(res.status).toBe(200);
   expect(res.body.data).toHaveLength(10);
-  expect(res.body.meta).toEqual({
+  expect(res.body.pagination).toEqual({
     page: 1,
     limit: 10,
     total: 12,
@@ -22,22 +22,29 @@ test("last page returns remaining items", async () => {
   const res = await request(app).get("/notes?page=2&limit=10");
   expect(res.status).toBe(200);
   expect(res.body.data).toHaveLength(2);
-  expect(res.body.meta.totalPages).toBe(2);
+  expect(res.body.pagination.totalPages).toBe(2);
 });
 
 test("page beyond available data returns empty data array, not error", async () => {
   const res = await request(app).get("/notes?page=99&limit=10");
   expect(res.status).toBe(200);
   expect(res.body.data).toEqual([]);
-  expect(res.body.meta.page).toBe(99);
-  expect(res.body.meta.total).toBe(12);
+  expect(res.body.pagination.page).toBe(99);
+  expect(res.body.pagination.total).toBe(12);
 });
 
 test("custom limit changes page size", async () => {
   const res = await request(app).get("/notes?page=1&limit=3");
   expect(res.status).toBe(200);
   expect(res.body.data).toHaveLength(3);
-  expect(res.body.meta.totalPages).toBe(4);
+  expect(res.body.pagination.totalPages).toBe(4);
+});
+
+test("limit=1 boundary works", async () => {
+  const res = await request(app).get("/notes?page=1&limit=1");
+  expect(res.status).toBe(200);
+  expect(res.body.data).toHaveLength(1);
+  expect(res.body.pagination.totalPages).toBe(12);
 });
 
 test("invalid page (negative) returns 400", async () => {

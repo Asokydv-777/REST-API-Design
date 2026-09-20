@@ -43,3 +43,26 @@ test("204 on successful delete, 404 on second delete", async () => {
   expect(second.status).toBe(404);
   expect(second.body.error.code).toBe("NoteNotFound");
 });
+
+test("unexpected error returns 500 with no stack leak", async () => {
+  const res = await request(app).get("/debug/boom");
+
+  expect(res.status).toBe(500);
+  expect(res.body).toEqual({
+    error: {
+      message: "Simulated database failure at db.query(line 42)",
+      code: "InternalError",
+    },
+  });
+
+  // No stack field
+  expect(res.body.error.stack).toBeUndefined();
+
+  // No internal path leaks
+  const serialized = JSON.stringify(res.body);
+  expect(serialized).not.toContain("node_modules");
+  expect(serialized).not.toContain(".js:");
+
+  // The specific stack-trace shape: newline + indent + "at "
+  expect(serialized).not.toMatch(/\n\s+at /);
+});
