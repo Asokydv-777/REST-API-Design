@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Phase 5 - Notes API",
-    "description": "Complete REST API collection for A5 submission. Includes success and error cases.",
+    "description": "Complete REST API collection for Task 7. Includes success, pagination, filtering, validation error, not-found, and 500 examples.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -9,47 +9,96 @@
   ],
   "item": [
     {
-      "name": "Health",
-      "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health",
+        "description": "Simple health check. Returns { status: 'ok' }."
+      }
     },
     {
       "name": "List notes - default pagination",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes" }
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes",
+        "description": "Lists notes with default page=1 and limit=10. Response includes data[] and pagination { page, limit, total, totalPages }."
+      }
     },
     {
-      "name": "List notes - page 2 limit 5",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes?page=2&limit=5" }
+      "name": "List notes - page 2, limit 5",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes?page=2&limit=5",
+        "description": "Demonstrates custom pagination."
+      }
     },
     {
-      "name": "List notes - page beyond data (empty data array)",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes?page=99&limit=10" }
+      "name": "List notes - page beyond data (empty array)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes?page=99&limit=10",
+        "description": "Requesting a page beyond available data returns 200 with an empty data array, NOT an error."
+      }
     },
     {
-      "name": "Filter archived=true",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes?archived=true" }
+      "name": "List notes - invalid pagination (400)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes?page=-1&limit=abc",
+        "description": "Invalid pagination params return 400 with the standard error envelope and a details[] array."
+      }
     },
     {
-      "name": "Filter archived=false + search",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes?archived=false&search=project" }
+      "name": "Filter - archived=true",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes?archived=true",
+        "description": "Boolean filter. Returns only archived notes. total/totalPages reflect the filtered set."
+      }
     },
     {
-      "name": "Combined filter + pagination",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes?archived=true&page=1&limit=2" }
+      "name": "Filter - search=project",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes?search=project",
+        "description": "Case-insensitive search across title and content."
+      }
+    },
+    {
+      "name": "Filter + pagination combined",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes?archived=true&page=1&limit=2",
+        "description": "Shows pagination applied to the FILTERED result set: total=3, totalPages=2."
+      }
     },
     {
       "name": "Get one note",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes/1" }
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes/1",
+        "description": "Returns a single note by ID. Wrapped in { data: {...} }."
+      }
     },
     {
-      "name": "Create note - success",
+      "name": "Get missing note (404)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/notes/9999",
+        "description": "Not-found case. Returns 404 with { error: { message, code } }."
+      }
+    },
+    {
+      "name": "Create note - success (201)",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"title\": \"Meeting notes for A5 review\",\n  \"content\": \"Discuss pagination edge cases and Postman collection coverage\"\n}"
+          "raw": "{\n  \"title\": \"Meeting notes for Task 7 review\",\n  \"content\": \"Discuss pagination edge cases and Postman collection coverage\"\n}"
         },
-        "url": "{{baseUrl}}/notes"
+        "url": "{{baseUrl}}/notes",
+        "description": "Creates a note with realistic data. Returns 201 with the created note."
       }
     },
     {
@@ -61,11 +110,25 @@
           "mode": "raw",
           "raw": "{\n  \"title\": \"\",\n  \"content\": \"\"\n}"
         },
-        "url": "{{baseUrl}}/notes"
+        "url": "{{baseUrl}}/notes",
+        "description": "Empty fields trigger validation. Response includes { error: { message, code, details: [{ field, message }] } }."
       }
     },
     {
-      "name": "Update note",
+      "name": "Create note - invalid body type (400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": 42,\n  \"content\": [\"not\", \"a\", \"string\"]\n}"
+        },
+        "url": "{{baseUrl}}/notes",
+        "description": "Wrong types for fields are also rejected with structured details."
+      }
+    },
+    {
+      "name": "Update note (200)",
       "request": {
         "method": "PUT",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -73,24 +136,54 @@
           "mode": "raw",
           "raw": "{\n  \"title\": \"Updated grocery list\",\n  \"archived\": true\n}"
         },
-        "url": "{{baseUrl}}/notes/1"
+        "url": "{{baseUrl}}/notes/1",
+        "description": "Partial update. Only provided fields change."
       }
     },
     {
-      "name": "Delete note",
-      "request": { "method": "DELETE", "url": "{{baseUrl}}/notes/3" }
+      "name": "Update missing note (404)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Won't apply\"\n}"
+        },
+        "url": "{{baseUrl}}/notes/9999",
+        "description": "Not-found on update — same envelope as all other errors."
+      }
     },
     {
-      "name": "Invalid pagination (400)",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes?page=-1&limit=abc" }
+      "name": "Delete note (204)",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/notes/3",
+        "description": "Successful delete returns 204 No Content."
+      }
     },
     {
-      "name": "Get missing note (404)",
-      "request": { "method": "GET", "url": "{{baseUrl}}/notes/9999" }
+      "name": "Delete missing note (404)",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/notes/9999",
+        "description": "Deleting a missing note returns 404 with the standard envelope."
+      }
     },
     {
       "name": "Unknown route (404)",
-      "request": { "method": "GET", "url": "{{baseUrl}}/does-not-exist" }
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/does-not-exist",
+        "description": "Unknown paths return 404 with the same error envelope — no HTML fallback."
+      }
+    },
+    {
+      "name": "Debug - simulate 500 (no stack leak)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/debug/boom",
+        "description": "Deliberately throws a non-operational error. Returns 500 with the standard error envelope — no stack trace, no internal paths. Only mounted when NODE_ENV !== 'production'."
+      }
     }
   ]
 }

@@ -3,12 +3,12 @@ const store = require("../data/notes.store");
 function listNotes({ page, limit, archived, search }) {
   let results = store.getAll();
 
-  // Filter 1: archived (boolean flag)
+  // Filter 1 — archived boolean
   if (archived !== undefined) {
     results = results.filter((n) => n.archived === archived);
   }
 
-  // Filter 2: search (text match on title OR content, case-insensitive)
+  // Filter 2 — text search on title OR content
   if (search) {
     const q = search.toLowerCase();
     results = results.filter(
@@ -18,13 +18,16 @@ function listNotes({ page, limit, archived, search }) {
     );
   }
 
-  // Pagination reflects the FILTERED result set
+  // total/totalPages reflect the FILTERED result set
   const total = results.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const start = (page - 1) * limit;
   const data = results.slice(start, start + limit);
 
-  return { data, meta: { page, limit, total, totalPages } };
+  return {
+    data,
+    pagination: { page, limit, total, totalPages },
+  };
 }
 
 module.exports = {

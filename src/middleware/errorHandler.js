@@ -35,7 +35,6 @@ function errorHandler(err, req, res, next) {
     },
   };
 
-  // Only include details for validation-style errors, never stack traces
   if (err.details) body.error.details = err.details;
 
   res.status(statusCode).json(body);
